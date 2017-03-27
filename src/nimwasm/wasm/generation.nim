@@ -52,3 +52,21 @@ proc module*(magic=0x6d736100, version= 0x00000001):Module=
   new result
   result.magic = magic
   result.version = version
+
+proc add*(es: var ExportSection, ee:varargs[ExportEntry]) =
+  if es == nil:
+    es = exportSec(ee)
+  else: es.entries.add(@ee)
+
+proc add*(fs: var FunctionSection, typeindx:varargs[int]) =
+  fs.entries.add(@typeindx)
+
+proc add*(ts: var TypeSection, typ:varargs[FuncType]) =
+  if ts == nil:
+    ts = typeSec(typ)
+  else: ts.entries.add(@typ)
+
+proc add*(cs: var CodeSection, fb: varargs[FunctionBody]) =
+  if cs == nil:
+    cs = codeSec(fb)
+  else: cs.entries.add(@fb)

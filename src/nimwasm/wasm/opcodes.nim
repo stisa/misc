@@ -1,5 +1,8 @@
 
 type
+
+  OpCodes* = Local | Global | I32 | I64 | F32 | F64 | MemorySize | ConstType | Numeric
+
   Local* {.pure.} = enum
     Get = (0x20,"\32")
     Set = (0x21, "\33")
