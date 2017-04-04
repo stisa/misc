@@ -4,17 +4,18 @@
 </head>
 <body>
     <div>
-        <h2>Adding with WebAssembly ( same func, exported two times )</h2>
+        <h2>Adding with WebAssembly</h2>
         <p>Write two numbers in the boxes below and then click on the `=` to show the result calculated from WebAssembly.</p>
         <input id="arg1" style="text-align: right;" size="7" />
         <span>+</span>
         <input id="arg2" style="text-align: right;" size="7" />
         <input type="submit" value="=" onclick="showRes()"/>
         <span id="result"></span>
+        <span id="result2"></span>
         
         <script>
             var wasmexports;
-            fetch('add.wasm').then(response =>
+            fetch('ops.wasm').then(response =>
                 response.arrayBuffer()
                 ).then(bytes =>
                 WebAssembly.instantiate(bytes)
@@ -25,6 +26,7 @@
                 var a = document.getElementById("arg1").value
                 var b = document.getElementById("arg2").value
                 document.getElementById("result").innerText = wasmexports.add(a,b)
+                document.getElementById("result2").innerText = wasmexports.sub(a,b)
             }
         </script>
     </div>
