@@ -36,6 +36,38 @@ proc encode*(ts:TypeSection):string =
   add result, temp.len.int32.unsignedLEB128
   add result, temp
 
+proc encode*(ie:ImportEntry):string = 
+  result = ie.module.len.int32.unsignedLEB128
+  add result, ie.module
+  add result, ie.field.len.int32.unsignedLEB128
+  add result, ie.field
+  add result, $ie.kind
+  when not defined js:
+    if ord(ie.kind) == 0:
+      # C bug?: `add result, $ie.kind` doesn't append if '\0'
+      add result, "\0"
+  case ie.kind:
+  of ExternalKind.Function :
+    add result, ie.ftypeindex.int32.unsignedLEB128
+  else:
+    echo "wrong kind importentry"
+  #of ExternalKind.Table:
+  #  ttype*: TableType
+  #of ExternalKind.Memory:
+  #  mtype*: MemoryType
+  #of ExternalKind.Global:
+  #  gtype*: GlobalType
+
+proc encode* (isec:ImportSection):string =
+  result = $SecCode.Import
+  var temp = isec.entries.len.int32.unsignedLEB128
+  # We encode the section in temp
+  for entry in isec.entries:
+    add temp, encode(entry)
+  # then we take it's length and finally add the block
+  add result, temp.len.int32.unsignedLEB128
+  add result, temp
+
 proc encode*(ee:ExportEntry):string = 
   result = ee.field.len.int32.signedLEB128
   #echo result.len
@@ -107,7 +139,14 @@ proc encode*(x:int32):string =
     result[0] = cast[char](x shr  0)
 proc encode*(m:Module):string = 
   result = encode(m.magic.int32) & encode(m.version.int32)
-  add result, encode(m.types)
-  add result, encode(m.functions)  
-  add result, encode(m.exports)
-  add result, encode(m.codes)
+  if not m.types.isnil:
+    add result, encode(m.types)
+  if not m.imports.isnil:
+    add result, encode(m.imports)
+  if not m.functions.isnil:
+    add result, encode(m.functions)  
+  if not m.exports.isnil:
+    add result, encode(m.exports)
+  if not m.codes.isnil:
+    add result, encode(m.codes)
+  

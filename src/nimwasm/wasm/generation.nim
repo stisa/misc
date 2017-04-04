@@ -7,7 +7,6 @@ import types
 
 proc importsec*(entries: varargs[ImportEntry]):ImportSection =
   ImportSection(entries: @entries)
-# TODO: encode importsection
 
 proc fnImportEntry*(module:string,field:string,typeindex:int):ImportEntry = 
   result = ImportEntry(kind:ExternalKind.Function, module:module, field:field, ftypeindex: typeindex)
@@ -20,15 +19,22 @@ proc memoryImportEntry*(module:string,field:string,mt:MemoryType):ImportEntry =
 
 proc globalImportEntry*(module:string,field:string,gt:GlobalType):ImportEntry = 
   result = ImportEntry(kind:ExternalKind.Global, module:module, field:field, gtype: gt)
-# TODO: encode importentry
 
-proc fnType*(kind:WasmType,returns:ValueType=ValueType.Pseudo,
-            params:varargs[ValueType]): FuncType =
-  FuncType(
-    form: kind,
-    params: @params,
-    returns: @[returns]
-  )
+proc fnType*(kind:WasmType,
+            params:varargs[ValueType],
+            rt:bool=false,returns:ValueType=ValueType.Pseudo): FuncType =
+  # FIXME: need rt:bool to differentiate return value from varargs
+  if rt:
+    FuncType(
+      form: kind,
+      params: @params,
+      returns: @[returns]
+    )
+  else:
+    FuncType(
+      form: kind,
+      params: @params
+    )
 
 proc localEntry*(c:int,kind:ValueType):LocalEntry =
   LocalEntry(count: c, ttype: kind)
@@ -70,3 +76,13 @@ proc add*(cs: var CodeSection, fb: varargs[FunctionBody]) =
   if cs == nil:
     cs = codeSec(fb)
   else: cs.entries.add(@fb)
+
+proc add*[T](m: var Module, what: varargs[T]) =
+  when T is ExportEntry:
+    m.exports.add(what)
+  elif T is int:
+    m.functions.add(what)
+  elif T is FuncType:
+    m.types.add(what)
+  elif T is FunctionBody:
+    m.codes.add(what)
