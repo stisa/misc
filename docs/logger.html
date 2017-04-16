@@ -1,0 +1,58 @@
+<html>
+<head>
+    <title>NimWasm - Import and log</title>
+</head>
+<body>
+    <div>
+        <h2>Console log with WebAssembly</h2>
+        <p>Write an integer in the box below and then click on the `=` to log to console.</p>
+        <input id="arg1" style="text-align: right;" size="7" />
+        <input type="submit" value="=" onclick="showRes()"/>
+
+        <code><pre>
+import ../src/nimwasm
+
+var mymod = module()
+
+var ft = fnType(WasmType.Func,ValueType.I32)
+mymod.types = typeSec(ft)
+
+mymod.functions = fnSec(0)
+var 
+  ie = fnimportEntry("console","log",0)
+
+mymod.imports = importSec(ie)
+
+var ee = exportEntry("log",ExternalKind.Function,0)
+mymod.exports = exportSec(ee)
+
+var fb = fnBody("\32\0\16\0")
+mymod.codes = codeSec(fb)
+
+writefile("logger.wasm",encode(mymod))
+    </pre></code>
+        <script>
+            var importObject = {
+                console: {
+                    log: function(arg) {
+                    console.log(arg);
+                    }
+                }
+            };
+            var wasmexports;
+            fetch('logger.wasm').then(response =>
+                response.arrayBuffer()
+                ).then(bytes => 
+                WebAssembly.instantiate(bytes,importObject)
+                
+                ).then(results => {
+                    wasmexports = results.instance.exports
+            });
+            function showRes(){
+                var a = document.getElementById("arg1").value
+                wasmexports.log(a)
+            }
+        </script>
+    </div>
+</body>
+</html>
